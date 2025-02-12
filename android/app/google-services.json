@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "5968190042",
+    "project_id": "meetme-47779",
+    "storage_bucket": "meetme-47779.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:5968190042:android:f009a914a7e2f2482e9663",
+        "android_client_info": {
+          "package_name": "com.example.meet_me"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2e533zIGhB5LWYj2tJsL207d-VdhVtwg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
