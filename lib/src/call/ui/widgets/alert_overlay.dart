@@ -1,21 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:meet_me/config/constants.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:meet_me/src/call/bloc/call_cubit.dart';
 import 'package:meet_me/src/call/ui/widgets/dot_load.dart';
 
-class AlertOverlayCenter extends StatelessWidget {
+class AlertOverlayCenter extends StatefulWidget {
   const AlertOverlayCenter(
       {super.key,
       this.heightContainer = 300,
       this.widthContainer = 450,
       this.lottiSize = 200,
-      required this.onBack,
-      required this.title});
+      required this.onBack});
 
   final double heightContainer;
   final double widthContainer;
   final double lottiSize;
   final VoidCallback onBack;
-  final String title;
+
+  @override
+  State<AlertOverlayCenter> createState() => _AlertOverlayCenterState();
+}
+
+class _AlertOverlayCenterState extends State<AlertOverlayCenter> {
+  late final CallCubit _callCubit;
+  
+  @override
+  void initState() {
+    _callCubit = context.read<CallCubit>();
+    context.read<CallCubit>().startTimeout();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _callCubit.stopTimeout();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,11 +63,11 @@ class AlertOverlayCenter extends StatelessWidget {
               ),
             ),
             Positioned(
-              top: (height / 2) - (heightContainer / 2),
-              left: (width / 2) - (widthContainer / 2),
+              top: (height / 2) - (widget.heightContainer / 2),
+              left: (width / 2) - (widget.widthContainer / 2),
               child: Container(
-                width: widthContainer,
-                height: heightContainer,
+                width: widget.widthContainer,
+                height: widget.heightContainer,
                 color: Colors.transparent,
                 child: Center(
                     child: Column(
@@ -55,12 +75,25 @@ class AlertOverlayCenter extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: thirdColor),
+                    BlocBuilder<CallCubit, CallState>(
+                      buildWhen: (previous, current) =>
+                          current is CallTimeoutReached ||
+                          current is CallTimerUpdated,
+                      builder: (context, state) {
+                        double timeLeft = 1000;
+                        if (state is CallTimerUpdated) {
+                          timeLeft = state.timeLeft;
+                        }
+                        return Text(
+                          timeLeft < 10
+                              ? "Call will end in ${timeLeft.toInt()} seconds"
+                              : "Waiting for other user",
+                          style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: thirdColor),
+                        );
+                      },
                     ),
                     const DotLoadWidget(
                       dotColor: thirdColor,
@@ -69,15 +102,14 @@ class AlertOverlayCenter extends StatelessWidget {
                 )),
               ),
             ),
-            
             Align(
                 alignment: Alignment.topLeft,
                 child: Padding(
                   padding: const EdgeInsets.only(left: 20, top: 20),
                   child: InkWell(
-                    onTap: onBack,
+                    onTap: widget.onBack,
                     child: Container(
-                      padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.grey,

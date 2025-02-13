@@ -14,7 +14,7 @@ mixin RegisterEngineAgora {
 }
 
 mixin JoinChannel {
-  Future<void> joinChannel({required String token, required String channelId});
+  Future<RtcEngine> joinChannel({required String token, required String channelId});
 }
 
 mixin LeaveChannel {

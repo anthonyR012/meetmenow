@@ -54,13 +54,13 @@ class _State extends State<VideoCallScreen> {
       isJoined = true;
       context
           .read<CallCubit>()
-          .setState(CallInitEngineSuccess(engine: _engine));
+          .setState(CallJoinChannelSuccess(engine: _engine));
       _playJoinSound();
     }, onUserJoined: (RtcConnection connection, int rUid, int elapsed) {
       remoteUid.add(rUid);
       context
           .read<CallCubit>()
-          .setState(CallInitEngineSuccess(engine: _engine));
+          .setState(CallJoinChannelSuccess(engine: _engine));
 
       _playJoinSound();
     }, onUserOffline:
@@ -68,14 +68,14 @@ class _State extends State<VideoCallScreen> {
       remoteUid.removeWhere((element) => element == rUid);
       context
           .read<CallCubit>()
-          .setState(CallInitEngineSuccess(engine: _engine));
+          .setState(CallJoinChannelSuccess(engine: _engine));
     }, onLeaveChannel: (RtcConnection connection, RtcStats stats) {
       isJoined = false;
       remoteUid.clear();
 
       context
           .read<CallCubit>()
-          .setState(CallInitEngineSuccess(engine: _engine));
+          .setState(CallJoinChannelSuccess(engine: _engine));
     });
   }
 
@@ -85,21 +85,24 @@ class _State extends State<VideoCallScreen> {
       body: SafeArea(
           child: BlocConsumer<CallCubit, CallState>(
         listener: (context, state) {
-          if (state is CallLeaveChannelSuccess) {
+          if (state is CallLeaveChannelSuccess || state is CallTimeoutReached) {
             Navigator.pop(context);
-          }else if(state is CallInitEngineSuccess){
+          } else if (state is CallInitEngineSuccess) {
             context.read<CallCubit>().joinChannel();
+          } else if (state is CallJoinChannelSuccess) {
+            _engine = state.engine;
           }
         },
         buildWhen: (previous, current) =>
-            current is CallInitEngineSuccess || current is CallFailure,
+            current is CallInitEngineSuccess ||
+            current is CallFailure ||
+            current is CallJoinChannelSuccess,
         builder: (context, state) {
-          if (state is CallInitEngineSuccess) {
+          if (state is CallJoinChannelSuccess) {
             _engine = state.engine;
-            
+
             if (remoteUid.isEmpty) {
               return AlertOverlayCenter(
-                title: "Waiting for other user",
                 onBack: () {
                   Navigator.pop(context);
                 },

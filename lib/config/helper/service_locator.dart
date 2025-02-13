@@ -23,6 +23,7 @@ import 'package:meet_me/src/call/domain/use_case/do_init_engine.dart';
 import 'package:meet_me/src/call/domain/use_case/do_join_channel.dart';
 import 'package:meet_me/src/call/domain/use_case/do_leave_channel.dart';
 import 'package:meet_me/src/call/domain/use_case/do_mute_video.dart';
+import 'package:meet_me/src/call/domain/use_case/do_timeout.dart';
 
 void injectDependencies() async {
   getIt.registerLazySingleton(() => FirebaseAuth.instance);
@@ -64,8 +65,9 @@ void injectCallDatasource() {
       () => DoJoinChannel(getIt(), channelId, token));
   _registerOrUnregister<DoLeaveChannel>(() => DoLeaveChannel(getIt()));
   _registerOrUnregister<DoMuteVideo>(() => DoMuteVideo(getIt()));
+  _registerOrUnregister<DoTimeOut>(() => DoTimeOut());
   _registerOrUnregister<CallCubit>(
-      () => CallCubit(getIt(), getIt(), getIt(), getIt()));
+      () => CallCubit(getIt(), getIt(), getIt(), getIt(),getIt()));
 }
 
 void _registerOrUnregister<T extends Object>(T Function() instanceBuilder) {

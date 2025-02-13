@@ -7,6 +7,7 @@ class CallAgoraDatasourceImplement extends CallAgoraDatasource {
   final FailureManage _failureManage;
   RtcEngine? _engine;
   RtcEngineEventHandler? _rtcEngineEventHandler;
+  bool _isJoined = false;
 
   CallAgoraDatasourceImplement(this._failureManage);
 
@@ -40,37 +41,49 @@ class CallAgoraDatasourceImplement extends CallAgoraDatasource {
   }
 
   @override
-  Future<void> joinChannel(
+  Future<RtcEngine> joinChannel(
       {required String token, required String channelId}) async {
     throwIfError(_engine == null, _failureManage.noFound("Video call active"));
-    await _engine!.joinChannel(
-      token: token,
-      channelId: channelId,
-      uid: 0,
-      options: const ChannelMediaOptions(
-        channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
-        clientRoleType: ClientRoleType.clientRoleBroadcaster,
-      ),
-    );
+    try {
+      if(_isJoined) return _engine!;
+      await _engine!.joinChannel(
+        token: token,
+        channelId: channelId,
+        uid: 0,
+        options: const ChannelMediaOptions(
+          channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+          clientRoleType: ClientRoleType.clientRoleBroadcaster,
+        ),
+      );
+      _isJoined = true;
+      return _engine!;
+    } catch (e) {
+       throw UnknownFailure(e.toString());
+    }
   }
 
   @override
   Future<void> leaveChannel() async {
     throwIfError(_rtcEngineEventHandler == null || _engine == null,
         _failureManage.noFound("Video call active"));
-    _engine!.unregisterEventHandler(_rtcEngineEventHandler!);
-    await _engine!.leaveChannel();
-    await _engine!.release();
+    try {
+      _engine!.unregisterEventHandler(_rtcEngineEventHandler!);
+      await _engine!.leaveChannel();
+      await _engine!.release();
+    } catch (e) {
+      throw UnknownFailure(e.toString());
+    }
     _engine = null;
     _rtcEngineEventHandler = null;
+    _isJoined = false;
   }
 
   @override
   Future<void> muteVideoStream(bool mute, MuteOption option) async {
     throwIfError(_engine == null, _failureManage.noFound("Video call active"));
-    if(option == MuteOption.myself) {
+    if (option == MuteOption.myself) {
       await _engine!.muteLocalVideoStream(mute);
-      return; 
+      return;
     }
     await _engine!.muteAllRemoteVideoStreams(mute);
   }

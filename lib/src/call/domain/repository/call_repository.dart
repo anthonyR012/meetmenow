@@ -11,7 +11,7 @@ abstract class CallRepository {
       void Function(RtcConnection, int, int)? onUserJoined,
       void Function(RtcConnection, int, UserOfflineReasonType)? onUserOffline,
       void Function(RtcConnection, RtcStats)? onLeaveChannel});
-  Future<Either<Failure, bool>> joinChannel(
+  Future<Either<Failure, RtcEngine>> joinChannel(
       {required String token, required String channelId});
   Future<Either<Failure, bool>> leaveChannel();
   Future<Either<Failure, bool>> muteVideoStream(bool mute, MuteOption option);

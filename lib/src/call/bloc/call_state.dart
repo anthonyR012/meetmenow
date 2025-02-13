@@ -28,8 +28,31 @@ final class CallInitEngineSuccess extends CallState {
   List<Object> get props => [engine];
 }
 
-final class CallJoinChannelSuccess extends CallState {}
+
+
+final class CallJoinChannelSuccess extends CallState {
+    final RtcEngine engine;
+
+  const CallJoinChannelSuccess({required this.engine});
+
+  @override
+  List<Object> get props => [engine];
+}
 
 final class CallLeaveChannelSuccess extends CallState {}
 
 final class CallMuteVideoSuccess extends CallState {}
+
+
+class CallTimerUpdated extends CallState {
+  final double timeLeft;
+  const CallTimerUpdated(this.timeLeft);
+  
+    @override
+  List<Object> get props => [timeLeft];
+}
+
+class CallTimeoutReached extends CallState {}
+
+class CallTimeoutStopped extends CallState {}
+
