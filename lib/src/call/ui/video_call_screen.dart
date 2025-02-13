@@ -1,5 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter/material.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,7 +7,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:meet_me/config/constants.dart';
 import 'package:meet_me/main.dart';
 import 'package:meet_me/src/call/bloc/call_cubit.dart';
-import 'package:meet_me/src/call/ui/widgets/flip_camera_icon_button.dart';
+import 'package:meet_me/src/call/ui/widgets/alert_overlay.dart';
+import 'package:meet_me/src/call/ui/widgets/video_stream.dart';
 
 class VideoCallScreen extends StatefulWidget {
   const VideoCallScreen({super.key});
@@ -18,7 +19,7 @@ class VideoCallScreen extends StatefulWidget {
 
 class _State extends State<VideoCallScreen> {
   late String _channelId;
-
+  late RtcEngine _engine;
   bool isJoined = false,
       switchCamera = true,
       switchRender = true,
@@ -26,7 +27,6 @@ class _State extends State<VideoCallScreen> {
       muteCamera = false,
       muteAllRemoteVideo = false;
   Set<int> remoteUid = {};
-  final bool _isUseAndroidSurfaceView = false;
 
   @override
   void initState() {
@@ -37,45 +37,46 @@ class _State extends State<VideoCallScreen> {
 
   @override
   void dispose() {
-    super.dispose();
     getIt<CallCubit>().leaveChannel();
+    super.dispose();
   }
 
   Future<void> _playJoinSound() async {
-    try{
-      await getIt<AudioPlayer>().play(AssetSource("sound/join-notification.mp3"));    
-    }catch(e){
-      print("error $e");
-    }
+    await getIt<AudioPlayer>().play(AssetSource("sound/join-notification.mp3"));
   }
 
   Future<void> _initEngine() async {
     await context.read<CallCubit>().initEngine(
-        onError: (ErrorCodeType err, String msg) {},
-        onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
-          setState(() {
-            isJoined = true;
-          });
-          _playJoinSound();
-        },
-        onUserJoined: (RtcConnection connection, int rUid, int elapsed) {
-          setState(() {
-            remoteUid.add(rUid);
-          });
-          _playJoinSound();
-        },
-        onUserOffline:
+        onError: (ErrorCodeType err, String msg) {
+      assert(false, "onError $err $msg");
+      context.read<CallCubit>().leaveChannel();
+    }, onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
+      isJoined = true;
+      context
+          .read<CallCubit>()
+          .setState(CallInitEngineSuccess(engine: _engine));
+      _playJoinSound();
+    }, onUserJoined: (RtcConnection connection, int rUid, int elapsed) {
+      remoteUid.add(rUid);
+      context
+          .read<CallCubit>()
+          .setState(CallInitEngineSuccess(engine: _engine));
+
+      _playJoinSound();
+    }, onUserOffline:
             (RtcConnection connection, int rUid, UserOfflineReasonType reason) {
-          setState(() {
-            remoteUid.removeWhere((element) => element == rUid);
-          });
-        },
-        onLeaveChannel: (RtcConnection connection, RtcStats stats) {
-          setState(() {
-            isJoined = false;
-            remoteUid.clear();
-          });
-        });
+      remoteUid.removeWhere((element) => element == rUid);
+      context
+          .read<CallCubit>()
+          .setState(CallInitEngineSuccess(engine: _engine));
+    }, onLeaveChannel: (RtcConnection connection, RtcStats stats) {
+      isJoined = false;
+      remoteUid.clear();
+
+      context
+          .read<CallCubit>()
+          .setState(CallInitEngineSuccess(engine: _engine));
+    });
   }
 
   @override
@@ -86,108 +87,46 @@ class _State extends State<VideoCallScreen> {
         listener: (context, state) {
           if (state is CallLeaveChannelSuccess) {
             Navigator.pop(context);
+          }else if(state is CallInitEngineSuccess){
+            context.read<CallCubit>().joinChannel();
           }
         },
         buildWhen: (previous, current) =>
             current is CallInitEngineSuccess || current is CallFailure,
         builder: (context, state) {
           if (state is CallInitEngineSuccess) {
-            final engine = state.engine;
-            return Stack(
-              children: [
-                AgoraVideoView(
-                  controller: VideoViewController(
-                    rtcEngine: engine,
-                    canvas: const VideoCanvas(uid: 0),
-                    useAndroidSurfaceView: _isUseAndroidSurfaceView,
-                  ),
-                  onAgoraVideoViewCreated: (viewId) {
-                    engine.startPreview();
-                  },
-                ),
-                if (!kIsWeb &&
-                    (defaultTargetPlatform == TargetPlatform.android ||
-                        defaultTargetPlatform == TargetPlatform.iOS))
-                  FlipCameraIconButton(engine: engine, isWeb: kIsWeb),
-                if (kIsWeb) ...[
-                  FlipCameraIconButton(engine: engine, isWeb: kIsWeb),
-                  ElevatedButton(
-                    onPressed: () {
-                      muteCamera = !muteCamera;
-                      context
-                          .read<CallCubit>()
-                          .muteVideoStream(muteCamera, MuteOption.myself);
-                    },
-                    child: Text('Camera ${muteCamera ? 'muted' : 'unmute'}'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      muteAllRemoteVideo = !muteAllRemoteVideo;
-                      context
-                          .read<CallCubit>()
-                          .muteVideoStream(muteCamera, MuteOption.myself);
-                    },
-                    child: Text(
-                        'All Remote Camera ${muteAllRemoteVideo ? 'muted' : 'unmute'}'),
-                  ),
-                ],
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: List.of(remoteUid.map(
-                        (e) => AnimatedContainer(
-                          duration:  const Duration(milliseconds: 200),
-                          width: 200,
-                          height: 200,
-                          child: AgoraVideoView(
-                            controller: VideoViewController.remote(
-                              rtcEngine: engine,
-                              canvas: VideoCanvas(uid: e),
-                              connection: RtcConnection(channelId: _channelId),
-                              useAndroidSurfaceView: _isUseAndroidSurfaceView,
-                            ),
-                          ),
-                        ),
-                      )),
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: InkWell(
-                        splashFactory: NoSplash.splashFactory,
-                        onTap: isJoined
-                            ? context.read<CallCubit>().leaveChannel
-                            : context.read<CallCubit>().joinChannel,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(11),
-                            color: isJoined ? Colors.red : primaryColor,
-                            border: Border.all(
-                                color: isJoined ? Colors.red : primaryColor),
-                          ),
-                          height: 40,
-                          width: MediaQuery.of(context).size.width * 0.4,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              const Icon(
-                                Icons.call,
-                                color: Colors.white,
-                              ),
-                              Text('${isJoined ? 'Leave' : 'Join'} channel',
-                                  style: const TextStyle(color: Colors.white)),
-                            ],
-                          ),
-                        ),
-                      )),
-                ),
-              ],
-            );
+            _engine = state.engine;
+            
+            if (remoteUid.isEmpty) {
+              return AlertOverlayCenter(
+                title: "Waiting for other user",
+                onBack: () {
+                  Navigator.pop(context);
+                },
+              );
+            }
+            return VideoStreamWidget(
+                engine: _engine,
+                onMuteCamera: () {
+                  muteAllRemoteVideo = !muteAllRemoteVideo;
+                  context
+                      .read<CallCubit>()
+                      .muteVideoStream(muteCamera, MuteOption.myself);
+                },
+                onMuteAllRemoteCamera: () {
+                  muteAllRemoteVideo = !muteAllRemoteVideo;
+                  context
+                      .read<CallCubit>()
+                      .muteVideoStream(muteCamera, MuteOption.myself);
+                },
+                remoteUid: remoteUid,
+                onCall: isJoined
+                    ? context.read<CallCubit>().leaveChannel
+                    : context.read<CallCubit>().joinChannel,
+                isJoined: isJoined,
+                muteCamera: muteCamera,
+                muteAllRemoteVideo: muteAllRemoteVideo,
+                channelId: _channelId);
           } else if (state is CallFailure) {
             return Center(
                 child: Text(

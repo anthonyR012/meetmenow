@@ -56,4 +56,8 @@ class CallCubit extends Cubit<CallState> {
     result.fold(
         (l) => emit(CallFailure(l)), (r) => emit(CallMuteVideoSuccess()));
   }
+
+  Future<void> setState(CallState state) async {
+    emit(state);
+  }
 }
