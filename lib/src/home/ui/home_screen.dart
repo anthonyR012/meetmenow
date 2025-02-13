@@ -2,7 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meet_me/src/auth/bloc/auth_cubit.dart';
-import 'package:meet_me/src/room/ui/video_call_screen.dart';
+import 'package:meet_me/src/call/ui/video_call_screen.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    [Permission.microphone, Permission.camera].request();
     _checkForParticipants();
   }
 

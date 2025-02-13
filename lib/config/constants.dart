@@ -62,4 +62,11 @@ final ligthTheme = ThemeData(
     ),
     iconTheme: const IconThemeData(color: primaryColor));
 
-  enum Repository { firebase }
+  enum Repository { firebase  }
+  enum MuteOption { all, myself }
+
+
+const String keyEnv = "ENV";
+const String keyAppId = "APP_ID_AGORA";
+const String keyChannelName = "CHANNEL_NAME";
+const String keyTokenAgora = "TOKEN_AGORA";

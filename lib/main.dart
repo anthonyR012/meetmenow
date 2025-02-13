@@ -6,6 +6,7 @@ import 'package:meet_me/config/constants.dart';
 import 'package:meet_me/config/helper/service_locator.dart';
 import 'package:meet_me/src/auth/bloc/auth_cubit.dart';
 import 'package:meet_me/src/auth/ui/auth_screen.dart';
+import 'package:meet_me/src/call/bloc/call_cubit.dart';
 
 import 'firebase_options.dart';
 
@@ -30,6 +31,8 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider<AuthCubit>(
             create: (context) => getIt<AuthCubit>(), lazy: true),
+        BlocProvider<CallCubit>(
+            create: (context) => getIt<CallCubit>(), lazy: true),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
