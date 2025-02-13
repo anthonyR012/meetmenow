@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -31,6 +32,7 @@ void injectDependencies() async {
   getIt.registerLazySingleton(() => FailureManage());
   await dotenv.load(fileName: ".env");
   getIt.registerLazySingleton<DotEnv>(() => dotenv);
+  getIt.registerLazySingleton<AudioPlayer>(() => AudioPlayer());
 
   injectAuthDatasource();
   injectCallDatasource();

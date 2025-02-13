@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
@@ -40,6 +41,14 @@ class _State extends State<VideoCallScreen> {
     getIt<CallCubit>().leaveChannel();
   }
 
+  Future<void> _playJoinSound() async {
+    try{
+      await getIt<AudioPlayer>().play(AssetSource("sound/join-notification.mp3"));    
+    }catch(e){
+      print("error $e");
+    }
+  }
+
   Future<void> _initEngine() async {
     await context.read<CallCubit>().initEngine(
         onError: (ErrorCodeType err, String msg) {},
@@ -47,11 +56,13 @@ class _State extends State<VideoCallScreen> {
           setState(() {
             isJoined = true;
           });
+          _playJoinSound();
         },
         onUserJoined: (RtcConnection connection, int rUid, int elapsed) {
           setState(() {
             remoteUid.add(rUid);
           });
+          _playJoinSound();
         },
         onUserOffline:
             (RtcConnection connection, int rUid, UserOfflineReasonType reason) {
@@ -126,7 +137,8 @@ class _State extends State<VideoCallScreen> {
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: List.of(remoteUid.map(
-                        (e) => SizedBox(
+                        (e) => AnimatedContainer(
+                          duration:  const Duration(milliseconds: 200),
                           width: 200,
                           height: 200,
                           child: AgoraVideoView(
