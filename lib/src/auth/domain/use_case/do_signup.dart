@@ -13,7 +13,7 @@ class DoSignUp {
       {required Repository repository,
       required String userName,
       required String password}) async {
-    return authRepository.signIn(
+    return authRepository.signUp(
         datasource: repository, userName: userName, password: password);
   }
 }

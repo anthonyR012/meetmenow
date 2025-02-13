@@ -1,131 +1,226 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:meet_me/config/constants.dart';
+import 'package:meet_me/src/room/ui/widgets/flip_camera_icon_button.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-const String APP_ID = "YOUR_AGORA_APP_ID";
-const String CHANNEL_NAME = "testChannel";
-const String TOKEN = "YOUR_TOKEN";
+const String APP_ID = "752cff42a3c84261b5d2d4d46b65bdfd";
+const String CHANNEL_NAME = "test";
+const String TOKEN =
+    "007eJxTYLiX8y+a4zFjmcgqofnVnIm2vnpiJr9WnCmcIuN7pvpibaMCg7mpUXJamolRonGyhYmRmWGSaYpRikmKiVmSmWlSSlqKzLe16Q2BjAxXXT6wMDJAIIjPwlCSWlzCwAAA9+AfTA==";
 
 class VideoCallScreen extends StatefulWidget {
-  final String username;
-  const VideoCallScreen({super.key, required this.username});
+  const VideoCallScreen({super.key});
 
   @override
-  State<VideoCallScreen> createState() => _VideoCallScreenState();
+  State<StatefulWidget> createState() => _State();
 }
 
-class _VideoCallScreenState extends State<VideoCallScreen> {
-  late RtcEngine _engine;
-  int? _remoteUid;
-  bool _localUserJoined = false;
-  bool _joined = false;
-  bool _isBlurred = false;
+class _State extends State<VideoCallScreen> {
+  late final RtcEngine _engine;
+
+  bool isJoined = false,
+      switchCamera = true,
+      switchRender = true,
+      openCamera = true,
+      muteCamera = false,
+      muteAllRemoteVideo = false;
+  Set<int> remoteUid = {};
+  late TextEditingController _controller;
+  bool _isUseFlutterTexture = false;
+  final bool _isUseAndroidSurfaceView = false;
+  ChannelProfileType _channelProfileType =
+      ChannelProfileType.channelProfileLiveBroadcasting;
+  late final RtcEngineEventHandler _rtcEngineEventHandler;
 
   @override
   void initState() {
+    [Permission.microphone, Permission.camera].request();
     super.initState();
-    _initAgora();
-  }
+    _controller = TextEditingController(text: CHANNEL_NAME);
 
-
-  Future<void> _initAgora() async {
-    await [Permission.microphone, Permission.camera].request();
-
-    //create the engine
-    _engine = createAgoraRtcEngine();
-    await _engine.initialize(const RtcEngineContext(
-      appId: APP_ID,
-      channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
-    ));
-    await _engine.enableVideo();
-    _engine.registerEventHandler(
-      RtcEngineEventHandler(
-        onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
-          debugPrint("local user ${connection.localUid} joined");
-          setState(() {
-            _localUserJoined = true;
-          });
-        },
-        onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
-          debugPrint("remote user $remoteUid joined");
-          setState(() {
-            _remoteUid = remoteUid;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("User $remoteUid has joined the call")),
-          );
-        },
-        onUserOffline: (RtcConnection connection, int remoteUid,
-            UserOfflineReasonType reason) {
-          debugPrint("remote user $remoteUid left channel");
-          setState(() {
-            _remoteUid = null;
-          });
-        },
-        onTokenPrivilegeWillExpire: (RtcConnection connection, String token) {
-          debugPrint(
-              '[onTokenPrivilegeWillExpire] connection: ${connection.toJson()}, token: $token');
-        },
-      ),
-    );
-
-    await _engine.joinChannel(
-      token: TOKEN,
-      channelId: CHANNEL_NAME,
-      uid: 0,
-      options: const ChannelMediaOptions(),
-    );
-    setState(() {
-      _joined = true;
-    });
+    _initEngine();
   }
 
   @override
   void dispose() {
-    _dispose();
     super.dispose();
+    _dispose();
   }
 
   Future<void> _dispose() async {
+    _engine.unregisterEventHandler(_rtcEngineEventHandler);
     await _engine.leaveChannel();
     await _engine.release();
   }
 
-  void _toggleBlur() {
+  Future<void> _initEngine() async {
+    _engine = createAgoraRtcEngine();
+    await _engine.initialize(const RtcEngineContext(
+      appId: APP_ID,
+      channelProfile: ChannelProfileType.channelProfileCommunication,
+    ));
+    _rtcEngineEventHandler = RtcEngineEventHandler(
+      onError: (ErrorCodeType err, String msg) {},
+      onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
+        setState(() {
+          isJoined = true;
+        });
+      },
+      onUserJoined: (RtcConnection connection, int rUid, int elapsed) {
+        setState(() {
+          remoteUid.add(rUid);
+        });
+      },
+      onUserOffline:
+          (RtcConnection connection, int rUid, UserOfflineReasonType reason) {
+        setState(() {
+          remoteUid.removeWhere((element) => element == rUid);
+        });
+      },
+      onLeaveChannel: (RtcConnection connection, RtcStats stats) {
+        setState(() {
+          isJoined = false;
+          remoteUid.clear();
+        });
+      },
+      onRemoteVideoStateChanged: (RtcConnection connection,
+          int remoteUid,
+          RemoteVideoState state,
+          RemoteVideoStateReason reason,
+          int elapsed) {},
+    );
+
+    _engine.registerEventHandler(_rtcEngineEventHandler);
+
+    await _engine.enableVideo();
+    await _engine.startPreview();
+  }
+
+  Future<void> _joinChannel() async {
+    await _engine.joinChannel(
+      token: TOKEN,
+      channelId: _controller.text,
+      uid: 0,
+      options: ChannelMediaOptions(
+        channelProfile: _channelProfileType,
+        clientRoleType: ClientRoleType.clientRoleBroadcaster,
+      ),
+    );
+  }
+
+  Future<void> _leaveChannel() async {
+    await _engine.leaveChannel();
     setState(() {
-      _isBlurred = !_isBlurred;
+      openCamera = true;
+      muteCamera = false;
+      muteAllRemoteVideo = false;
+    });
+  }
+
+  _muteLocalVideoStream() async {
+    await _engine.muteLocalVideoStream(!muteCamera);
+    setState(() {
+      muteCamera = !muteCamera;
+    });
+  }
+
+  _muteAllRemoteVideoStreams() async {
+    await _engine.muteAllRemoteVideoStreams(!muteAllRemoteVideo);
+    setState(() {
+      muteAllRemoteVideo = !muteAllRemoteVideo;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Video Call")),
-      body: PopScope(
-        canPop: false,
-        child: Stack(
-          children: [
-            Center(
-              child: _joined
-                  ? AgoraVideoView(
-                      controller: VideoViewController(
-                        rtcEngine: _engine,
-                        canvas: const VideoCanvas(uid: 0),
-                      ),
-                    )
-                  : const CircularProgressIndicator(),
+      body: SafeArea(
+          child: Stack(
+        children: [
+          AgoraVideoView(
+            controller: VideoViewController(
+              rtcEngine: _engine,
+              canvas: const VideoCanvas(uid: 0),
+              useFlutterTexture: _isUseFlutterTexture,
+              useAndroidSurfaceView: _isUseAndroidSurfaceView,
             ),
-            if (_isBlurred)
-              Container(
-                color: Colors.black.withValues(),
-              ),
+            onAgoraVideoViewCreated: (viewId) {
+              _engine.startPreview();
+            },
+          ),
+          if (!kIsWeb &&
+              (defaultTargetPlatform == TargetPlatform.android ||
+                  defaultTargetPlatform == TargetPlatform.iOS))
+            FlipCameraIconButton(engine: _engine, isWeb: kIsWeb),
+          if (kIsWeb) ...[
+            FlipCameraIconButton(engine: _engine, isWeb: kIsWeb),
+            ElevatedButton(
+              onPressed: _muteLocalVideoStream,
+              child: Text('Camera ${muteCamera ? 'muted' : 'unmute'}'),
+            ),
+            ElevatedButton(
+              onPressed: _muteAllRemoteVideoStreams,
+              child: Text(
+                  'All Remote Camera ${muteAllRemoteVideo ? 'muted' : 'unmute'}'),
+            ),
           ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _toggleBlur,
-        child: const Icon(Icons.blur_on),
-      ),
+          Align(
+            alignment: Alignment.topLeft,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: List.of(remoteUid.map(
+                  (e) => SizedBox(
+                    width: 200,
+                    height: 200,
+                    child: AgoraVideoView(
+                      controller: VideoViewController.remote(
+                        rtcEngine: _engine,
+                        canvas: VideoCanvas(uid: e),
+                        connection: RtcConnection(channelId: _controller.text),
+                        useFlutterTexture: _isUseFlutterTexture,
+                        useAndroidSurfaceView: _isUseAndroidSurfaceView,
+                      ),
+                    ),
+                  ),
+                )),
+              ),
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: InkWell(
+                  splashFactory: NoSplash.splashFactory,
+                  onTap: isJoined ? _leaveChannel : _joinChannel,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(11),
+                      color: isJoined ? Colors.red : primaryColor,
+                      border: Border.all(
+                          color: isJoined ? Colors.red : primaryColor),
+                    ),
+                    height: 40,
+                    width: MediaQuery.of(context).size.width * 0.4,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        const Icon(
+                          Icons.call,
+                          color: Colors.white,
+                        ),
+                        Text('${isJoined ? 'Leave' : 'Join'} channel',
+                            style: const TextStyle(color: Colors.white)),
+                      ],
+                    ),
+                  ),
+                )),
+          ),
+        ],
+      )),
     );
   }
 }
