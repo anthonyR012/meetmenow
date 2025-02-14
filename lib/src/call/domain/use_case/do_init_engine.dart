@@ -8,7 +8,7 @@ class DoInitEngine {
   final String appId;
   DoInitEngine(this.callRepository, this.appId);
 
-  Future<Either<Failure, RtcEngine>> call(
+  Future<Either<Failure, bool>> call(
       {required void Function(ErrorCodeType, String)? onError,
       required void Function(RtcConnection, int)? onJoinChannelSuccess,
       required void Function(RtcConnection, int, int)? onUserJoined,

@@ -1,4 +1,3 @@
-
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
 
@@ -35,10 +34,10 @@ class _FlipCameraIconButtonState extends State<FlipCameraIconButton>
     _controller.forward(from: 0.0);
 
     if (widget.isWeb) {
+      await widget.engine.enableLocalVideo(switchCamera);
       setState(() {
         switchCamera = !switchCamera;
-      });
-      await widget.engine.enableLocalVideo(switchCamera);
+      });      
       return;
     }
     await widget.engine.switchCamera();
@@ -65,12 +64,16 @@ class _FlipCameraIconButtonState extends State<FlipCameraIconButton>
             child: IconButton(
               onPressed: _flipIcon,
               icon: Icon(
-                widget.isWeb ? Icons.camera_alt_outlined : Icons.camera_front,
+                widget.isWeb
+                    ? !switchCamera
+                        ? Icons.camera_alt_outlined
+                        : Icons.camera_alt_rounded
+                    : Icons.flip_camera_ios_outlined,
                 size: 28,
                 color: widget.isWeb
-                    ? switchCamera
-                        ? Colors.red
-                        : Colors.green
+                    ? !switchCamera
+                        ? Colors.green
+                        : Colors.red
                     : null,
               ),
             ),

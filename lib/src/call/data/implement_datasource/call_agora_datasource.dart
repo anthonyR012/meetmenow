@@ -1,3 +1,4 @@
+
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:meet_me/config/constants.dart';
 import 'package:meet_me/config/core/failure.dart';
@@ -12,7 +13,7 @@ class CallAgoraDatasourceImplement extends CallAgoraDatasource {
   CallAgoraDatasourceImplement(this._failureManage, this.engine);
 
   @override
-  Future<RtcEngine> registerRtcEngine(
+  Future<void> registerRtcEngine(
       {required String appId,
       void Function(ErrorCodeType p1, String p2)? onError,
       void Function(RtcConnection p1, int p2)? onJoinChannelSuccess,
@@ -38,17 +39,15 @@ class CallAgoraDatasourceImplement extends CallAgoraDatasource {
       await engine.enableVideo();
       await engine.startPreview();
     } catch (e) {
-      throw UnknownFailure(
-          "Engine initialization failed: ${e.toString()}"); 
+      throw UnknownFailure("Engine initialization failed: ${e.toString()}");
     }
-    return engine;
   }
 
   @override
-  Future<RtcEngine> joinChannel(
+  Future<void> joinChannel(
       {required String token, required String channelId}) async {
     try {
-      if (_isJoined) return engine;
+      if (_isJoined) return;
       await engine.joinChannel(
         token: token,
         channelId: channelId,
@@ -59,7 +58,6 @@ class CallAgoraDatasourceImplement extends CallAgoraDatasource {
         ),
       );
       _isJoined = true;
-      return engine;
     } catch (e) {
       throw UnknownFailure(e.toString());
     }
@@ -69,6 +67,7 @@ class CallAgoraDatasourceImplement extends CallAgoraDatasource {
   Future<void> leaveChannel() async {
     throwIfError(_rtcEngineEventHandler == null,
         _failureManage.noFound("Video call active"));
+    if (!_isJoined) return;
     try {
       engine.unregisterEventHandler(_rtcEngineEventHandler!);
       await engine.leaveChannel();
@@ -81,6 +80,8 @@ class CallAgoraDatasourceImplement extends CallAgoraDatasource {
 
   @override
   Future<void> muteVideoStream(bool mute, MuteOption option) async {
+    throwIfError(_rtcEngineEventHandler == null,
+        _failureManage.noFound("Video call active"));
     if (option == MuteOption.myself) {
       await engine.muteLocalVideoStream(mute);
       return;

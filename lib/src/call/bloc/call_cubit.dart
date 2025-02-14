@@ -37,18 +37,17 @@ class CallCubit extends Cubit<CallState> {
         onUserOffline: onUserOffline,
         onLeaveChannel: onLeaveChannel);
     result.fold((l) => emit(CallFailure(l)),
-        (r) => emit(CallInitEngineSuccess(engine: r)));
+        (r) => emit(CallInitEngineSuccess()));
   }
 
   Future<void> joinChannel() async {
     emit(CallLoading());
     final result = await doJoinChannel.call();
     result.fold((l) => emit(CallFailure(l)),
-        (r) => emit(CallJoinChannelSuccess(engine: r,)));
+        (r) => emit(const CallJoinChannelSuccess()));
   }
 
   Future<void> leaveChannel() async {
-    emit(CallLoading());
     final result = await doLeaveChannel.call();
     result.fold(
         (l) => emit(CallFailure(l)), (r) => emit(CallLeaveChannelSuccess()));

@@ -43,18 +43,8 @@ class VideoStreamWidget extends StatelessWidget {
             (defaultTargetPlatform == TargetPlatform.android ||
                 defaultTargetPlatform == TargetPlatform.iOS))
           FlipCameraIconButton(engine: engine, isWeb: kIsWeb),
-        if (kIsWeb) ...[
+        if (kIsWeb) 
           FlipCameraIconButton(engine: engine, isWeb: kIsWeb),
-          ElevatedButton(
-            onPressed: onMuteCamera,
-            child: Text('Camera ${muteCamera ? 'muted' : 'unmute'}'),
-          ),
-          ElevatedButton(
-            onPressed: onMuteAllRemoteCamera,
-            child: Text(
-                'All Remote Camera ${muteAllRemoteVideo ? 'muted' : 'unmute'}'),
-          ),
-        ],
         Align(
           alignment: Alignment.topLeft,
           child: SingleChildScrollView(

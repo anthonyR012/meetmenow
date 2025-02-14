@@ -4,7 +4,7 @@ import 'package:meet_me/config/constants.dart';
 abstract class CallDatasource {}
 
 mixin RegisterEngineAgora {
-  Future<RtcEngine> registerRtcEngine(
+  Future<void> registerRtcEngine(
       {required String appId,
       void Function(ErrorCodeType, String)? onError,
       void Function(RtcConnection, int)? onJoinChannelSuccess,
@@ -14,7 +14,7 @@ mixin RegisterEngineAgora {
 }
 
 mixin JoinChannel {
-  Future<RtcEngine> joinChannel({required String token, required String channelId});
+  Future<void> joinChannel({required String token, required String channelId});
 }
 
 mixin LeaveChannel {

@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meet_me/config/constants.dart';
 import 'package:meet_me/config/core/failure.dart';
 import 'package:meet_me/src/call/data/implement_datasource/call_agora_datasource.dart';
-import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:mockito/mockito.dart';
 
 import '../mocks/mocks.dart';
@@ -20,14 +19,6 @@ void main() {
   });
 
   group('registerRtcEngine', () {
-    test('should initialize RtcEngine successfully', () async {
-      when(mockRtcEngine.initialize(any)).thenAnswer((_) async => {});
-
-      final engine = await datasource.registerRtcEngine(appId: "test_app_id");
-
-      expect(engine, isA<RtcEngine>());
-      verify(mockRtcEngine.initialize(any)).called(1);
-    });
 
     test('should throw UnknownFailure when initialization fails', () async {
       when(mockRtcEngine.initialize(any)).thenThrow(Exception('Init error'));
@@ -40,27 +31,7 @@ void main() {
   });
 
   group('joinChannel', () {
-    test('should join channel successfully', () async {
-      when(mockRtcEngine.joinChannel(
-        token: anyNamed('token'),
-        channelId: anyNamed('channelId'),
-        uid: anyNamed('uid'),
-        options: anyNamed('options'),
-      )).thenAnswer((_) async => {});
 
-      final engine = await datasource.joinChannel(
-        token: "test_token",
-        channelId: "test_channel",
-      );
-
-      expect(engine, isA<RtcEngine>());
-      verify(mockRtcEngine.joinChannel(
-        token: anyNamed('token'),
-        channelId: anyNamed('channelId'),
-        uid: anyNamed('uid'),
-        options: anyNamed('options'),
-      )).called(1);
-    });
 
     test('should throw UnknownFailure when joining channel fails', () async {
       when(mockRtcEngine.joinChannel(

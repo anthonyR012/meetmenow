@@ -20,26 +20,19 @@ final class CallFailure extends CallState {
 }
 
 final class CallInitEngineSuccess extends CallState {
-  final RtcEngine engine;
-
-  const CallInitEngineSuccess({required this.engine});
-
-  @override
-  List<Object> get props => [engine];
 }
 
 final class CallJoinChannelSuccess extends CallState {
-  final RtcEngine engine;
   final bool isJoined;
   final bool hasJoinedUser;
 
   const CallJoinChannelSuccess(
-      {required this.engine,
+      {
       this.hasJoinedUser = false,
       this.isJoined = true});
 
   @override
-  List<Object> get props => [engine, isJoined, hasJoinedUser];
+  List<Object> get props => [ isJoined, hasJoinedUser];
 }
 
 final class CallLeaveChannelSuccess extends CallState {}

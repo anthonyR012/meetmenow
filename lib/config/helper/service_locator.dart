@@ -35,6 +35,7 @@ void injectDependencies() async {
   await dotenv.load(fileName: ".env");
   getIt.registerLazySingleton<DotEnv>(() => dotenv);
   getIt.registerLazySingleton<AudioPlayer>(() => AudioPlayer());
+  getIt.registerLazySingleton<RtcEngine>(() => createAgoraRtcEngine());
 
   injectAuthDatasource();
   injectCallDatasource();
@@ -52,9 +53,9 @@ void injectAuthDatasource() {
 }
 
 void injectCallDatasource() {
-  final engine = createAgoraRtcEngine();
+  
   _registerOrUnregister<CallAgoraDatasource>(
-      () => CallAgoraDatasourceImplement(getIt(), engine));
+      () => CallAgoraDatasourceImplement(getIt(), getIt()));
   _registerOrUnregister<CallRepository>(() => CallImplement(getIt()));
   //USES CASES
   final dot = getIt<DotEnv>();

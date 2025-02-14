@@ -11,13 +11,13 @@ class CallImplement extends CallRepository {
   CallImplement(this._callAgoraDatasource);
 
   @override
-  Future<Either<Failure, RtcEngine>> joinChannel(
+  Future<Either<Failure, bool>> joinChannel(
       {required String token, required String channelId}) async {
     try {
-      final RtcEngine engine = await _callAgoraDatasource.joinChannel(
+      await _callAgoraDatasource.joinChannel(
           token: token, channelId: channelId);
 
-      return Right(engine);
+      return const Right(true);
     } catch (e, stackTrace) {
       assert(e is Failure, "Line $stackTrace ${e.toString()}");
       return Left(e is Failure ? e : UnknownFailure(e.toString()));
@@ -37,7 +37,7 @@ class CallImplement extends CallRepository {
   }
 
   @override
-  Future<Either<Failure, RtcEngine>> registerRtcEngine(
+  Future<Either<Failure, bool>> registerRtcEngine(
       {required String appId,
       void Function(ErrorCodeType p1, String p2)? onError,
       void Function(RtcConnection p1, int p2)? onJoinChannelSuccess,
@@ -46,7 +46,7 @@ class CallImplement extends CallRepository {
           onUserOffline,
       void Function(RtcConnection p1, RtcStats p2)? onLeaveChannel}) async {
     try {
-      final RtcEngine engine = await _callAgoraDatasource.registerRtcEngine(
+      await _callAgoraDatasource.registerRtcEngine(
           appId: appId,
           onError: onError,
           onJoinChannelSuccess: onJoinChannelSuccess,
@@ -54,7 +54,7 @@ class CallImplement extends CallRepository {
           onUserJoined: onUserJoined,
           onUserOffline: onUserOffline);
 
-      return Right(engine);
+      return const Right(true);
     } catch (e, stackTrace) {
       assert(e is Failure, "Line $stackTrace ${e.toString()}");
       return Left(e is Failure ? e : UnknownFailure(e.toString()));

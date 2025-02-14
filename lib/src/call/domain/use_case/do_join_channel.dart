@@ -1,4 +1,4 @@
-import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+
 import 'package:dartz/dartz.dart';
 import 'package:meet_me/config/core/failure.dart';
 import 'package:meet_me/src/call/domain/repository/call_repository.dart';
@@ -9,7 +9,7 @@ class DoJoinChannel {
   final String token;
   DoJoinChannel(this.callRepository, this.channelId, this.token);
 
-  Future<Either<Failure, RtcEngine>> call() async {
+  Future<Either<Failure, bool>> call() async {
     return callRepository.joinChannel(token: token, channelId: channelId);
   }
 }

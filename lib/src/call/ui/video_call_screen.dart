@@ -18,11 +18,7 @@ class VideoCallScreen extends StatefulWidget {
 }
 
 class _State extends State<VideoCallScreen> {
-  late RtcEngine _engine;
-  bool switchCamera = true,
-      switchRender = true,
-      openCamera = true,
-      muteCamera = false,
+  bool muteCamera = false,
       muteAllRemoteVideo = false;
   Set<int> remoteUid = {};
 
@@ -32,7 +28,7 @@ class _State extends State<VideoCallScreen> {
     _initEngine();
   }
 
-  @override
+    @override
   void dispose() {
     getIt<CallCubit>().leaveChannel();
     super.dispose();
@@ -48,26 +44,25 @@ class _State extends State<VideoCallScreen> {
       assert(false, "onError $err $msg");
       context.read<CallCubit>().leaveChannel();
     }, onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
-      context
-          .read<CallCubit>()
-          .setState(CallJoinChannelSuccess(engine: _engine));
+      context.read<CallCubit>().setState(const CallJoinChannelSuccess());
       _playJoinSound();
     }, onUserJoined: (RtcConnection connection, int rUid, int elapsed) {
       remoteUid.add(rUid);
-      context.read<CallCubit>().setState(
-          CallJoinChannelSuccess(engine: _engine, hasJoinedUser: true));
+      context
+          .read<CallCubit>()
+          .setState(const CallJoinChannelSuccess(hasJoinedUser: true));
 
       _playJoinSound();
     }, onUserOffline:
             (RtcConnection connection, int rUid, UserOfflineReasonType reason) {
       remoteUid.removeWhere((element) => element == rUid);
-      context.read<CallCubit>().setState(CallJoinChannelSuccess(
-          engine: _engine, hasJoinedUser: remoteUid.isNotEmpty));
+      context.read<CallCubit>().setState(
+          CallJoinChannelSuccess(hasJoinedUser: remoteUid.isNotEmpty));
     }, onLeaveChannel: (RtcConnection connection, RtcStats stats) {
       remoteUid.clear();
 
-      context.read<CallCubit>().setState(CallJoinChannelSuccess(
-          engine: _engine, isJoined: false, hasJoinedUser: false));
+      context.read<CallCubit>().setState(
+          const CallJoinChannelSuccess(isJoined: false, hasJoinedUser: false));
     });
   }
 
@@ -81,8 +76,6 @@ class _State extends State<VideoCallScreen> {
             Navigator.pop(context);
           } else if (state is CallInitEngineSuccess) {
             context.read<CallCubit>().joinChannel();
-          } else if (state is CallJoinChannelSuccess) {
-            _engine = state.engine;
           }
         },
         buildWhen: (previous, current) =>
@@ -91,7 +84,6 @@ class _State extends State<VideoCallScreen> {
             current is CallJoinChannelSuccess,
         builder: (context, state) {
           if (state is CallJoinChannelSuccess) {
-            _engine = state.engine;
             if (state.isJoined && !state.hasJoinedUser) {
               return AlertOverlayCenter(
                 onBack: () {
@@ -100,7 +92,7 @@ class _State extends State<VideoCallScreen> {
               );
             }
             return VideoStreamWidget(
-                engine: _engine,
+                engine: getIt<RtcEngine>(),
                 onMuteCamera: () {
                   muteAllRemoteVideo = !muteAllRemoteVideo;
                   context
