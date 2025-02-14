@@ -1,3 +1,4 @@
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -51,8 +52,9 @@ void injectAuthDatasource() {
 }
 
 void injectCallDatasource() {
+  final engine = createAgoraRtcEngine();
   _registerOrUnregister<CallAgoraDatasource>(
-      () => CallAgoraDatasourceImplement(getIt()));
+      () => CallAgoraDatasourceImplement(getIt(), engine));
   _registerOrUnregister<CallRepository>(() => CallImplement(getIt()));
   //USES CASES
   final dot = getIt<DotEnv>();
@@ -67,7 +69,7 @@ void injectCallDatasource() {
   _registerOrUnregister<DoMuteVideo>(() => DoMuteVideo(getIt()));
   _registerOrUnregister<DoTimeOut>(() => DoTimeOut());
   _registerOrUnregister<CallCubit>(
-      () => CallCubit(getIt(), getIt(), getIt(), getIt(),getIt()));
+      () => CallCubit(getIt(), getIt(), getIt(), getIt(), getIt()));
 }
 
 void _registerOrUnregister<T extends Object>(T Function() instanceBuilder) {

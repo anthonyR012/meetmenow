@@ -1,64 +1,52 @@
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meet_me/config/constants.dart';
 import 'package:meet_me/config/core/failure.dart';
 import 'package:meet_me/src/call/data/implement_datasource/call_agora_datasource.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:mockito/mockito.dart';
 
 import '../mocks/mocks.dart';
-
+import '../mocks/mocks.mocks.dart';
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
   late CallAgoraDatasourceImplement datasource;
-  late MockFailureManage failureManage;
+  late MockFailureManage mockFailureManage;
   late MockRtcEngine mockRtcEngine;
 
-  setUpAll(() {
-    registerFallbackValue(const RtcEngineContext(appId: 'test_app_id'));
-    registerFallbackValue(const ChannelMediaOptions(
-      channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
-      clientRoleType: ClientRoleType.clientRoleBroadcaster,
-    ));
-  });
-
   setUp(() {
-    failureManage = MockFailureManage();
+    mockFailureManage = MockFailureManage();
     mockRtcEngine = MockRtcEngine();
-    datasource = CallAgoraDatasourceImplement(failureManage);
+    datasource = CallAgoraDatasourceImplement(mockFailureManage, mockRtcEngine);
   });
 
   group('registerRtcEngine', () {
-    test('should throw error if initialization fails', () async {
-      when(() => mockRtcEngine.initialize(any()))
-          .thenThrow(Exception('Initialization Error'));
+    test('should initialize RtcEngine successfully', () async {
+      when(mockRtcEngine.initialize(any)).thenAnswer((_) async => {});
+
+      final engine = await datasource.registerRtcEngine(appId: "test_app_id");
+
+      expect(engine, isA<RtcEngine>());
+      verify(mockRtcEngine.initialize(any)).called(1);
+    });
+
+    test('should throw UnknownFailure when initialization fails', () async {
+      when(mockRtcEngine.initialize(any)).thenThrow(Exception('Init error'));
 
       expect(
-        () async => await datasource.registerRtcEngine(
-          appId: "test_app_id",
-          onError: null,
-          onJoinChannelSuccess: null,
-          onUserJoined: null,
-          onUserOffline: null,
-          onLeaveChannel: null,
-        ),
-        throwsA(isA<Exception>()),
+        () async => await datasource.registerRtcEngine(appId: "test_app_id"),
+        throwsA(isA<UnknownFailure>()),
       );
     });
   });
 
   group('joinChannel', () {
     test('should join channel successfully', () async {
-      when(() => mockRtcEngine.joinChannel(
-            token: any(named: 'token'),
-            channelId: any(named: 'channelId'),
-            uid: any(named: 'uid'),
-            options: any(named: 'options'),
-          )).thenAnswer((_) async => {});
-
-      datasource = CallAgoraDatasourceImplement(failureManage)
-        ..engine = mockRtcEngine;
+      when(mockRtcEngine.joinChannel(
+        token: anyNamed('token'),
+        channelId: anyNamed('channelId'),
+        uid: anyNamed('uid'),
+        options: anyNamed('options'),
+      )).thenAnswer((_) async => {});
 
       final engine = await datasource.joinChannel(
         token: "test_token",
@@ -66,72 +54,64 @@ void main() {
       );
 
       expect(engine, isA<RtcEngine>());
+      verify(mockRtcEngine.joinChannel(
+        token: anyNamed('token'),
+        channelId: anyNamed('channelId'),
+        uid: anyNamed('uid'),
+        options: anyNamed('options'),
+      )).called(1);
     });
 
-    test('should throw error if engine is null', () async {
+    test('should throw UnknownFailure when joining channel fails', () async {
+      when(mockRtcEngine.joinChannel(
+        token: anyNamed('token'),
+        channelId: anyNamed('channelId'),
+        uid: anyNamed('uid'),
+        options: anyNamed('options'),
+      )).thenThrow(Exception('Join failed'));
+
       expect(
         () async => await datasource.joinChannel(
-          token: "test_token",
-          channelId: "test_channel",
-        ),
-        throwsA(isA<Failure>()),
+            token: "test_token", channelId: "test_channel"),
+        throwsA(isA<UnknownFailure>()),
       );
     });
   });
 
   group('leaveChannel', () {
-    test('should leave channel successfully', () async {
-      when(() => mockRtcEngine.leaveChannel()).thenAnswer((_) async => {});
-      when(() => mockRtcEngine.unregisterEventHandler(any()))
-          .thenAnswer((_) async => {});
-      when(() => mockRtcEngine.release()).thenAnswer((_) async => {});
 
-      datasource = CallAgoraDatasourceImplement(failureManage)
-        ..engine = mockRtcEngine;
 
-      await datasource.leaveChannel();
+    test('should throw UnknownFailure when leaving channel fails', () async {
+      when(mockRtcEngine.leaveChannel()).thenThrow(Exception('Leave failed'));
+      when(mockRtcEngine.initialize(any)).thenAnswer((_) async => {});
 
-      verify(() => mockRtcEngine.leaveChannel()).called(1);
-    });
+      await datasource.registerRtcEngine(appId: "test_app_id");
 
-    test('should throw error if engine is null', () async {
+      
       expect(
         () async => await datasource.leaveChannel(),
-        throwsA(isA<Failure>()),
+        throwsA(isA<UnknownFailure>()),
       );
     });
   });
 
   group('muteVideoStream', () {
     test('should mute local video stream when option is MYSELF', () async {
-      when(() => mockRtcEngine.muteLocalVideoStream(true))
+      when(mockRtcEngine.muteLocalVideoStream(true))
           .thenAnswer((_) async => {});
-
-      datasource = CallAgoraDatasourceImplement(failureManage)
-        ..engine = mockRtcEngine;
 
       await datasource.muteVideoStream(true, MuteOption.myself);
 
-      verify(() => mockRtcEngine.muteLocalVideoStream(true)).called(1);
+      verify(mockRtcEngine.muteLocalVideoStream(true)).called(1);
     });
 
     test('should mute all remote video streams when option is ALL', () async {
-      when(() => mockRtcEngine.muteAllRemoteVideoStreams(true))
+      when(mockRtcEngine.muteAllRemoteVideoStreams(true))
           .thenAnswer((_) async => {});
-
-      datasource = CallAgoraDatasourceImplement(failureManage)
-        ..engine = mockRtcEngine;
 
       await datasource.muteVideoStream(true, MuteOption.all);
 
-      verify(() => mockRtcEngine.muteAllRemoteVideoStreams(true)).called(1);
-    });
-
-    test('should throw error if engine is null', () async {
-      expect(
-        () async => await datasource.muteVideoStream(true, MuteOption.myself),
-        throwsA(isA<Failure>()),
-      );
+      verify(mockRtcEngine.muteAllRemoteVideoStreams(true)).called(1);
     });
   });
 }

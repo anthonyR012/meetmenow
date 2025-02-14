@@ -30,8 +30,8 @@ class _AlertOverlayCenterState extends State<AlertOverlayCenter> {
 
   @override
   void initState() {
-    if (widget.timer) {
-      _callCubit = context.read<CallCubit>();
+     _callCubit = context.read<CallCubit>();
+    if (widget.timer) {     
       context.read<CallCubit>().startTimeout();
     }
 

@@ -3,14 +3,13 @@ import 'package:meet_me/config/constants.dart';
 import 'package:meet_me/config/core/failure.dart';
 import 'package:meet_me/src/call/data/datasource/call_datasource.dart';
 
-
 class CallAgoraDatasourceImplement extends CallAgoraDatasource {
   final FailureManage _failureManage;
-  RtcEngine? engine;
+  final RtcEngine engine;
   RtcEngineEventHandler? _rtcEngineEventHandler;
   bool _isJoined = false;
 
-  CallAgoraDatasourceImplement(this._failureManage);
+  CallAgoraDatasourceImplement(this._failureManage, this.engine);
 
   @override
   Future<RtcEngine> registerRtcEngine(
@@ -21,33 +20,36 @@ class CallAgoraDatasourceImplement extends CallAgoraDatasource {
       void Function(RtcConnection p1, int p2, UserOfflineReasonType p3)?
           onUserOffline,
       void Function(RtcConnection p1, RtcStats p2)? onLeaveChannel}) async {
-    engine ??= createAgoraRtcEngine();
-    if (_rtcEngineEventHandler == null) {
-      await engine!.initialize(RtcEngineContext(
-        appId: appId,
-        channelProfile: ChannelProfileType.channelProfileCommunication,
-      ));
-      _rtcEngineEventHandler = RtcEngineEventHandler(
-          onError: onError,
-          onJoinChannelSuccess: onJoinChannelSuccess,
-          onUserJoined: onUserJoined,
-          onUserOffline: onUserOffline,
-          onLeaveChannel: onLeaveChannel);
+    try {
+      if (_rtcEngineEventHandler == null) {
+        await engine.initialize(RtcEngineContext(
+          appId: appId,
+          channelProfile: ChannelProfileType.channelProfileCommunication,
+        ));
+        _rtcEngineEventHandler = RtcEngineEventHandler(
+            onError: onError,
+            onJoinChannelSuccess: onJoinChannelSuccess,
+            onUserJoined: onUserJoined,
+            onUserOffline: onUserOffline,
+            onLeaveChannel: onLeaveChannel);
 
-      engine!.registerEventHandler(_rtcEngineEventHandler!);
+        engine.registerEventHandler(_rtcEngineEventHandler!);
+      }
+      await engine.enableVideo();
+      await engine.startPreview();
+    } catch (e) {
+      throw UnknownFailure(
+          "Engine initialization failed: ${e.toString()}"); 
     }
-    await engine!.enableVideo();
-    await engine!.startPreview();
-    return engine!;
+    return engine;
   }
 
   @override
   Future<RtcEngine> joinChannel(
       {required String token, required String channelId}) async {
-    throwIfError(engine == null, _failureManage.noFound("Video call active"));
     try {
-      if(_isJoined) return engine!;
-      await engine!.joinChannel(
+      if (_isJoined) return engine;
+      await engine.joinChannel(
         token: token,
         channelId: channelId,
         uid: 0,
@@ -57,35 +59,32 @@ class CallAgoraDatasourceImplement extends CallAgoraDatasource {
         ),
       );
       _isJoined = true;
-      return engine!;
+      return engine;
     } catch (e) {
-       throw UnknownFailure(e.toString());
+      throw UnknownFailure(e.toString());
     }
   }
 
   @override
   Future<void> leaveChannel() async {
-    throwIfError(_rtcEngineEventHandler == null || engine == null,
+    throwIfError(_rtcEngineEventHandler == null,
         _failureManage.noFound("Video call active"));
     try {
-      engine!.unregisterEventHandler(_rtcEngineEventHandler!);
-      await engine!.leaveChannel();
-      await engine!.release();
+      engine.unregisterEventHandler(_rtcEngineEventHandler!);
+      await engine.leaveChannel();
     } catch (e) {
       throw UnknownFailure(e.toString());
     }
-    engine = null;
     _rtcEngineEventHandler = null;
     _isJoined = false;
   }
 
   @override
   Future<void> muteVideoStream(bool mute, MuteOption option) async {
-    throwIfError(engine == null, _failureManage.noFound("Video call active"));
     if (option == MuteOption.myself) {
-      await engine!.muteLocalVideoStream(mute);
+      await engine.muteLocalVideoStream(mute);
       return;
     }
-    await engine!.muteAllRemoteVideoStreams(mute);
+    await engine.muteAllRemoteVideoStreams(mute);
   }
 }
