@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 
-const primaryColor = Color(0xFF3D8D7A);
-const secondaryColor = Color(0xFFB3D8A8);
-const thirdColor = Color(0xFFFBFFE4);
-const fourthColor = Color(0xFFA3D1C6);
+const primaryColor = Color(0xFF56021F);
+const secondaryColor = Color(0xFF7D1C4A);
+const thirdColor = Color(0xFFD17D98);
+const fourthColor = Color(0xFFF4CCE9);
 
 final ligthTheme = ThemeData(
     canvasColor: Colors.grey[100],

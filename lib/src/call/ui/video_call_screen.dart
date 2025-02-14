@@ -3,7 +3,6 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:meet_me/config/constants.dart';
 import 'package:meet_me/main.dart';
 import 'package:meet_me/src/call/bloc/call_cubit.dart';
@@ -11,14 +10,14 @@ import 'package:meet_me/src/call/ui/widgets/alert_overlay.dart';
 import 'package:meet_me/src/call/ui/widgets/video_stream.dart';
 
 class VideoCallScreen extends StatefulWidget {
-  const VideoCallScreen({super.key});
+  const VideoCallScreen({super.key, required this.channelId});
+  final String channelId;
 
   @override
   State<StatefulWidget> createState() => _State();
 }
 
 class _State extends State<VideoCallScreen> {
-  late String _channelId;
   late RtcEngine _engine;
   bool isJoined = false,
       switchCamera = true,
@@ -30,7 +29,6 @@ class _State extends State<VideoCallScreen> {
 
   @override
   void initState() {
-    _channelId = getIt<DotEnv>().env[keyChannelName] ?? "";
     super.initState();
     _initEngine();
   }
@@ -98,16 +96,16 @@ class _State extends State<VideoCallScreen> {
             current is CallFailure ||
             current is CallJoinChannelSuccess,
         builder: (context, state) {
+          if (remoteUid.isEmpty) {
+            return AlertOverlayCenter(
+              onBack: () {
+                Navigator.pop(context);
+              },
+            );
+          }
           if (state is CallJoinChannelSuccess) {
             _engine = state.engine;
 
-            if (remoteUid.isEmpty) {
-              return AlertOverlayCenter(
-                onBack: () {
-                  Navigator.pop(context);
-                },
-              );
-            }
             return VideoStreamWidget(
                 engine: _engine,
                 onMuteCamera: () {
@@ -129,7 +127,7 @@ class _State extends State<VideoCallScreen> {
                 isJoined: isJoined,
                 muteCamera: muteCamera,
                 muteAllRemoteVideo: muteAllRemoteVideo,
-                channelId: _channelId);
+                channelId: widget.channelId);
           } else if (state is CallFailure) {
             return Center(
                 child: Text(

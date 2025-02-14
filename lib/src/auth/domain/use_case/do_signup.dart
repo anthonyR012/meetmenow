@@ -13,6 +13,9 @@ class DoSignUp {
       {required Repository repository,
       required String userName,
       required String password}) async {
+    if (userName.isEmpty || password.isEmpty) {
+      return Left(EmptyFailure("Empty username or password"));
+    }
     return authRepository.signUp(
         datasource: repository, userName: userName, password: password);
   }

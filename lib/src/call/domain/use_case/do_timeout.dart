@@ -4,7 +4,7 @@ import 'dart:async';
 class DoTimeOut {
   StreamController<double>? _controller;
   Timer? _timer;
-  double _timeLeft = 10.0;
+  double _timeLeft = 600;
 
   Stream<double> call({required bool isRunning}) {
   
@@ -34,7 +34,7 @@ class DoTimeOut {
 
   void _stopTimer() {
     _timer?.cancel();
-    _timeLeft = 10.0;
+    _timeLeft = 600;
     _controller?.close();
     _controller = null;
   }

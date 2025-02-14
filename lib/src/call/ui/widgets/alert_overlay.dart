@@ -59,7 +59,7 @@ class _AlertOverlayCenterState extends State<AlertOverlayCenter> {
               child: Container(
                 width: width,
                 height: height,
-                color: Colors.black26,
+                color: Colors.black45,
               ),
             ),
             Positioned(

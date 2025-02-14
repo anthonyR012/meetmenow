@@ -5,11 +5,11 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 class NetworkState {
   final Connectivity _connectivity;
   late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
-  late ConnectivityResult _connectionStatus;
+  ConnectivityResult? _connectionStatus;
 
   NetworkState(this._connectivity);
 
-  ConnectivityResult get status => _connectionStatus;
+  ConnectivityResult get status => _connectionStatus ?? ConnectivityResult.wifi;
   Future<void> watchConnectionState() async {
     _connectivitySubscription =
         _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);

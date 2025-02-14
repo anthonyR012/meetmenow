@@ -10,7 +10,7 @@ class DoSignOut {
   DoSignOut(this.authRepository);
 
   Future<Either<Failure, bool>> call({required Repository repository}) async {
-
+    
     return await authRepository.signOut(datasource: Repository.firebase);
   }
 }
