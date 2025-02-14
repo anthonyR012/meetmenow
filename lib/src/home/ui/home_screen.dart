@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
           margin: const EdgeInsets.only(top: 5),
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-              color: Colors.green, borderRadius: BorderRadius.circular(10)),
+              color: primaryColor, borderRadius: BorderRadius.circular(10)),
           child: InkWell(
             onTap: () {
               Navigator.push(

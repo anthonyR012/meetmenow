@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 
-const primaryColor = Color(0xFF56021F);
+const primaryColor = Colors.purple;
 const secondaryColor = Color(0xFF7D1C4A);
 const thirdColor = Color(0xFFD17D98);
 const fourthColor = Color(0xFFF4CCE9);

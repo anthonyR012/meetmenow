@@ -21,7 +21,7 @@ class CallAgoraDatasourceImplement extends CallAgoraDatasource {
       void Function(RtcConnection p1, int p2, UserOfflineReasonType p3)?
           onUserOffline,
       void Function(RtcConnection p1, RtcStats p2)? onLeaveChannel}) async {
-    engine ??= createAgoraRtcEngineEx();
+    engine ??= createAgoraRtcEngine();
     if (_rtcEngineEventHandler == null) {
       await engine!.initialize(RtcEngineContext(
         appId: appId,

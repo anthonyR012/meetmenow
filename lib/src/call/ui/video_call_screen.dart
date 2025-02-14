@@ -19,8 +19,7 @@ class VideoCallScreen extends StatefulWidget {
 
 class _State extends State<VideoCallScreen> {
   late RtcEngine _engine;
-  bool isJoined = false,
-      switchCamera = true,
+  bool switchCamera = true,
       switchRender = true,
       openCamera = true,
       muteCamera = false,
@@ -49,31 +48,26 @@ class _State extends State<VideoCallScreen> {
       assert(false, "onError $err $msg");
       context.read<CallCubit>().leaveChannel();
     }, onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
-      isJoined = true;
       context
           .read<CallCubit>()
           .setState(CallJoinChannelSuccess(engine: _engine));
       _playJoinSound();
     }, onUserJoined: (RtcConnection connection, int rUid, int elapsed) {
       remoteUid.add(rUid);
-      context
-          .read<CallCubit>()
-          .setState(CallJoinChannelSuccess(engine: _engine));
+      context.read<CallCubit>().setState(
+          CallJoinChannelSuccess(engine: _engine, hasJoinedUser: true));
 
       _playJoinSound();
     }, onUserOffline:
             (RtcConnection connection, int rUid, UserOfflineReasonType reason) {
       remoteUid.removeWhere((element) => element == rUid);
-      context
-          .read<CallCubit>()
-          .setState(CallJoinChannelSuccess(engine: _engine));
+      context.read<CallCubit>().setState(CallJoinChannelSuccess(
+          engine: _engine, hasJoinedUser: remoteUid.isNotEmpty));
     }, onLeaveChannel: (RtcConnection connection, RtcStats stats) {
-      isJoined = false;
       remoteUid.clear();
 
-      context
-          .read<CallCubit>()
-          .setState(CallJoinChannelSuccess(engine: _engine));
+      context.read<CallCubit>().setState(CallJoinChannelSuccess(
+          engine: _engine, isJoined: false, hasJoinedUser: false));
     });
   }
 
@@ -96,16 +90,15 @@ class _State extends State<VideoCallScreen> {
             current is CallFailure ||
             current is CallJoinChannelSuccess,
         builder: (context, state) {
-          if (remoteUid.isEmpty) {
-            return AlertOverlayCenter(
-              onBack: () {
-                Navigator.pop(context);
-              },
-            );
-          }
           if (state is CallJoinChannelSuccess) {
             _engine = state.engine;
-
+            if (state.isJoined && !state.hasJoinedUser) {
+              return AlertOverlayCenter(
+                onBack: () {
+                  Navigator.pop(context);
+                },
+              );
+            }
             return VideoStreamWidget(
                 engine: _engine,
                 onMuteCamera: () {
@@ -121,10 +114,10 @@ class _State extends State<VideoCallScreen> {
                       .muteVideoStream(muteCamera, MuteOption.myself);
                 },
                 remoteUid: remoteUid,
-                onCall: isJoined
+                onCall: state.isJoined
                     ? context.read<CallCubit>().leaveChannel
                     : context.read<CallCubit>().joinChannel,
-                isJoined: isJoined,
+                isJoined: state.isJoined,
                 muteCamera: muteCamera,
                 muteAllRemoteVideo: muteAllRemoteVideo,
                 channelId: widget.channelId);
@@ -135,7 +128,13 @@ class _State extends State<VideoCallScreen> {
               style: const TextStyle(color: Colors.red),
             ));
           }
-          return const Center(child: CircularProgressIndicator());
+          return AlertOverlayCenter(
+            timer: false,
+            title: "Entering the room",
+            onBack: () {
+              Navigator.pop(context);
+            },
+          );
         },
       )),
     );

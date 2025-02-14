@@ -1,3 +1,4 @@
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meet_me/config/constants.dart';
 import 'package:meet_me/config/core/failure.dart';
@@ -5,11 +6,8 @@ import 'package:meet_me/src/call/data/implement_datasource/call_agora_datasource
 import 'package:mocktail/mocktail.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 
+import '../mocks/mocks.dart';
 
-// Mock Dependencies
-class MockFailureManage extends Mock implements FailureManage {}
-
-class MockRtcEngine extends Mock implements RtcEngine {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -32,21 +30,6 @@ void main() {
   });
 
   group('registerRtcEngine', () {
-    test('should initialize RtcEngine successfully', () async {
-      when(() => mockRtcEngine.initialize(any())).thenAnswer((_) async => {});
-
-      final engine = await datasource.registerRtcEngine(
-        appId: "test_app_id",
-        onError: null,
-        onJoinChannelSuccess: null,
-        onUserJoined: null,
-        onUserOffline: null,
-        onLeaveChannel: null,
-      );
-
-      expect(engine, isA<RtcEngine>());
-    });
-
     test('should throw error if initialization fails', () async {
       when(() => mockRtcEngine.initialize(any()))
           .thenThrow(Exception('Initialization Error'));

@@ -28,31 +28,32 @@ final class CallInitEngineSuccess extends CallState {
   List<Object> get props => [engine];
 }
 
-
-
 final class CallJoinChannelSuccess extends CallState {
-    final RtcEngine engine;
+  final RtcEngine engine;
+  final bool isJoined;
+  final bool hasJoinedUser;
 
-  const CallJoinChannelSuccess({required this.engine});
+  const CallJoinChannelSuccess(
+      {required this.engine,
+      this.hasJoinedUser = false,
+      this.isJoined = true});
 
   @override
-  List<Object> get props => [engine];
+  List<Object> get props => [engine, isJoined, hasJoinedUser];
 }
 
 final class CallLeaveChannelSuccess extends CallState {}
 
 final class CallMuteVideoSuccess extends CallState {}
 
-
 class CallTimerUpdated extends CallState {
   final double timeLeft;
   const CallTimerUpdated(this.timeLeft);
-  
-    @override
+
+  @override
   List<Object> get props => [timeLeft];
 }
 
 class CallTimeoutReached extends CallState {}
 
 class CallTimeoutStopped extends CallState {}
-

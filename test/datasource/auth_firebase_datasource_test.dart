@@ -3,13 +3,13 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meet_me/config/constants.dart';
 import 'package:meet_me/config/core/failure.dart';
-import 'package:meet_me/src/auth/data/datasource/auth_datasource.dart';
 import 'package:meet_me/src/auth/domain/implement/auth_implement.dart';
 import 'package:meet_me/src/auth/domain/model/user_model.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockAuthFirebaseDatasource extends Mock
-    implements AuthFirebaseDatasource {}
+import '../mocks/mocks.dart';
+
+
 
 void main() {
   late AuthImplement authRepository;
@@ -42,10 +42,11 @@ void main() {
     });
 
     test('should return Failure when signIn fails', () async {
+      final exception = UnknownFailure('Login failed');
       when(() => mockAuthFirebaseDatasource.signIn(
               userName: any(named: 'userName'),
               password: any(named: 'password')))
-          .thenThrow(UnknownFailure('Login failed'));
+          .thenThrow(exception);
 
       final result = await authRepository.signIn(
         userName: 'test_user',
@@ -53,7 +54,7 @@ void main() {
         datasource: Repository.firebase,
       );
 
-      expect(result.fold((l) => l, (r) => r) , UnknownFailure('Login failed'));
+      expect(result.fold((l) => l, (r) => r) , exception);
     });
   });
 
@@ -70,14 +71,15 @@ void main() {
     });
 
     test('should return Failure when signOut fails', () async {
+      final exception = UnknownFailure('Sign out failed'); 
       when(() => mockAuthFirebaseDatasource.signOut())
-          .thenThrow(UnknownFailure('Sign out failed'));
+          .thenThrow(exception);
 
       final result = await authRepository.signOut(
         datasource: Repository.firebase,
       );
 
-      expect(result, Left(UnknownFailure('Sign out failed')));
+      expect(result, Left(exception));
     });
   });
 
@@ -103,10 +105,11 @@ void main() {
     });
 
     test('should return Failure when signUp fails', () async {
+      final exception = UnknownFailure('Sign up failed');
       when(() => mockAuthFirebaseDatasource.signUp(
               userName: any(named: 'userName'),
               password: any(named: 'password')))
-          .thenThrow(UnknownFailure('Sign up failed'));
+          .thenThrow(exception);
 
       final result = await authRepository.signUp(
         userName: 'new_user',
@@ -114,7 +117,7 @@ void main() {
         datasource: Repository.firebase,
       );
 
-      expect(result, Left(UnknownFailure('Sign up failed')));
+      expect(result, Left(exception));
     });
   });
 }

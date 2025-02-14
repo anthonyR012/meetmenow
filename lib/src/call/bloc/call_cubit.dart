@@ -44,7 +44,7 @@ class CallCubit extends Cubit<CallState> {
     emit(CallLoading());
     final result = await doJoinChannel.call();
     result.fold((l) => emit(CallFailure(l)),
-        (r) => emit(CallJoinChannelSuccess(engine: r)));
+        (r) => emit(CallJoinChannelSuccess(engine: r,)));
   }
 
   Future<void> leaveChannel() async {

@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'Meet me',
         theme: ligthTheme,
-        home: const AuthScreen(),
+        home: AuthScreen(),
       ),
     );
   }

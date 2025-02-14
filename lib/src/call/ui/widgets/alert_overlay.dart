@@ -10,12 +10,16 @@ class AlertOverlayCenter extends StatefulWidget {
       this.heightContainer = 300,
       this.widthContainer = 450,
       this.lottiSize = 200,
+      this.title = "Waiting for other user",
+      this.timer = true,
       required this.onBack});
 
   final double heightContainer;
   final double widthContainer;
   final double lottiSize;
   final VoidCallback onBack;
+  final String title;
+  final bool timer;
 
   @override
   State<AlertOverlayCenter> createState() => _AlertOverlayCenterState();
@@ -23,17 +27,20 @@ class AlertOverlayCenter extends StatefulWidget {
 
 class _AlertOverlayCenterState extends State<AlertOverlayCenter> {
   late final CallCubit _callCubit;
-  
+
   @override
   void initState() {
-    _callCubit = context.read<CallCubit>();
-    context.read<CallCubit>().startTimeout();
+    if (widget.timer) {
+      _callCubit = context.read<CallCubit>();
+      context.read<CallCubit>().startTimeout();
+    }
+
     super.initState();
   }
 
   @override
   void dispose() {
-    _callCubit.stopTimeout();
+    if (widget.timer) _callCubit.stopTimeout();
     super.dispose();
   }
 
@@ -59,7 +66,7 @@ class _AlertOverlayCenterState extends State<AlertOverlayCenter> {
               child: Container(
                 width: width,
                 height: height,
-                color: Colors.black45,
+                color: Colors.black,
               ),
             ),
             Positioned(
@@ -75,28 +82,37 @@ class _AlertOverlayCenterState extends State<AlertOverlayCenter> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    BlocBuilder<CallCubit, CallState>(
-                      buildWhen: (previous, current) =>
-                          current is CallTimeoutReached ||
-                          current is CallTimerUpdated,
-                      builder: (context, state) {
-                        double timeLeft = 1000;
-                        if (state is CallTimerUpdated) {
-                          timeLeft = state.timeLeft;
-                        }
-                        return Text(
-                          timeLeft < 10
-                              ? "Call will end in ${timeLeft.toInt()} seconds"
-                              : "Waiting for other user",
-                          style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: thirdColor),
-                        );
-                      },
-                    ),
+                    if (widget.timer)
+                      BlocBuilder<CallCubit, CallState>(
+                        buildWhen: (previous, current) =>
+                            current is CallTimeoutReached ||
+                            current is CallTimerUpdated,
+                        builder: (context, state) {
+                          double timeLeft = 1000;
+                          if (state is CallTimerUpdated) {
+                            timeLeft = state.timeLeft;
+                          }
+                          return Text(
+                            timeLeft < 10
+                                ? "Call will end in ${timeLeft.toInt()} seconds"
+                                : widget.title,
+                            style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: primaryColor),
+                          );
+                        },
+                      )
+                    else
+                      Text(
+                        widget.title,
+                        style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: primaryColor),
+                      ),
                     const DotLoadWidget(
-                      dotColor: thirdColor,
+                      dotColor: primaryColor,
                     ),
                   ],
                 )),
@@ -113,11 +129,11 @@ class _AlertOverlayCenterState extends State<AlertOverlayCenter> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.grey,
-                          border: Border.all(color: thirdColor, width: 2),
+                          border: Border.all(color: primaryColor, width: 2),
                         ),
                         child: const Icon(
                           Icons.arrow_back_ios_new_rounded,
-                          color: thirdColor,
+                          color: primaryColor,
                           size: 18,
                         )),
                   ),
