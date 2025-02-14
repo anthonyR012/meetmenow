@@ -1,1 +1,39 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"meetme-47779","appId":"1:5968190042:android:f009a914a7e2f2482e9663","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"meetme-47779","configurations":{"android":"1:5968190042:android:f009a914a7e2f2482e9663","ios":"1:5968190042:ios:0b7e7f28467649132e9663","macos":"1:5968190042:ios:0b7e7f28467649132e9663","web":"1:5968190042:web:429c6b7ff65008302e9663","windows":"1:5968190042:web:7eed90e2ed1bc1672e9663"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "meetme-47779",
+          "appId": "1:5968190042:android:f009a914a7e2f2482e9663",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "meetme-47779",
+          "configurations": {
+            "android": "1:5968190042:android:f009a914a7e2f2482e9663",
+            "ios": "1:5968190042:ios:0b7e7f28467649132e9663",
+            "macos": "1:5968190042:ios:0b7e7f28467649132e9663",
+            "web": "1:5968190042:web:429c6b7ff65008302e9663",
+            "windows": "1:5968190042:web:7eed90e2ed1bc1672e9663"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
